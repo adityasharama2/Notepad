@@ -1,0 +1,438 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+// Layout Component
+function Layout({ children }: { children: React.ReactNode }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true')
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn')
+    router.push('/login')
+  }
+
+  if (!isLoggedIn && pathname !== '/login') {
+    router.push('/login')
+    return null
+  }
+
+  if (pathname === '/login') {
+    return <>{children}</>
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <header className="bg-gray-800 text-white p-4">
+        <nav className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Notepad</h1>
+          <div className="space-x-4">
+            <Link href="/dashboard" className="hover:text-gray-300">Dashboard</Link>
+            <Link href="/notepad" className="hover:text-gray-300">Notepad</Link>
+            <Link href="/search" className="hover:text-gray-300">Search Details</Link>
+            <Link href="/change-password" className="hover:text-gray-300">Change Password</Link>
+            <Button onClick={handleLogout} variant="outline">Logout</Button>
+          </div>
+        </nav>
+      </header>
+      <main className="flex-grow container mx-auto p-4">
+        {children}
+      </main>
+    </div>
+  )
+}
+
+// Login Component
+function Login() {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const router = useRouter()
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (username === 'admin' && password === '123456789') {
+      localStorage.setItem('isLoggedIn', 'true')
+      router.push('/dashboard')
+    } else {
+      setError('Invalid username or password')
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+          <CardDescription>Enter your credentials to access the notepad</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm" role="alert">{error}</p>}
+            <Button type="submit" className="w-full">Login</Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Dashboard Component
+function Dashboard() {
+  const [formData, setFormData] = useState({
+    companyId: '',
+    caseFileNumber: '',
+    nameOfApplicant: '',
+    homeAddress: '',
+    vill: '',
+    teh: '',
+    district: '',
+    state: '',
+    pin: ''
+  })
+
+  useEffect(() => {
+    const storedDetails = localStorage.getItem('personalDetails')
+    if (storedDetails) {
+      setFormData(JSON.parse(storedDetails))
+    }
+  }, [])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    localStorage.setItem('personalDetails', JSON.stringify(formData))
+    alert('Personal details saved!')
+  }
+
+  return (
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Personal Details</CardTitle>
+        <CardDescription>Enter your personal information</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="companyId">Company ID</Label>
+              <Input id="companyId" name="companyId" value={formData.companyId} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="caseFileNumber">Case File Number</Label>
+              <Input id="caseFileNumber" name="caseFileNumber" value={formData.caseFileNumber} onChange={handleChange} required />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="nameOfApplicant">Name of Applicant</Label>
+            <Input id="nameOfApplicant" name="nameOfApplicant" value={formData.nameOfApplicant} onChange={handleChange} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="homeAddress">Home Address</Label>
+            <Input id="homeAddress" name="homeAddress" value={formData.homeAddress} onChange={handleChange} required />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="vill">Village</Label>
+              <Input id="vill" name="vill" value={formData.vill} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="teh">Tehsil</Label>
+              <Input id="teh" name="teh" value={formData.teh} onChange={handleChange} required />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="district">District</Label>
+              <Input id="district" name="district" value={formData.district} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input id="state" name="state" value={formData.state} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pin">PIN</Label>
+              <Input id="pin" name="pin" value={formData.pin} onChange={handleChange} required />
+            </div>
+          </div>
+          <Button type="submit" className="w-full">Save</Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Search Component
+function Search() {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchType, setSearchType] = useState('companyId')
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('Searching for:', searchTerm, 'by', searchType)
+    alert(Searching for ${searchTerm} by ${searchType})
+  }
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Search Details</CardTitle>
+        <CardDescription>Search for files using various criteria</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSearch} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="searchType">Search By</Label>
+            <Select onValueChange={(value) => setSearchType(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select search type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="companyId">Company ID</SelectItem>
+                <SelectItem value="caseFileNumber">Case File Number</SelectItem>
+                <SelectItem value="mobileNumber">Mobile Number</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="searchTerm">Search Term</Label>
+            <Input
+              id="searchTerm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={Enter ${searchType}}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full">Search</Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Change Password Component
+function ChangePassword() {
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword !== confirmPassword) {
+      alert("New passwords don't match!")
+      return
+    }
+    console.log('Changing password')
+    alert('Password changed successfully!')
+  }
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Change Password</CardTitle>
+        <CardDescription>Update your account password</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">New Password</Label>
+            <Input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full">Change Password</Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Notepad Component
+function Notepad() {
+  const [noteContent, setNoteContent] = useState('')
+  const [personalDetails, setPersonalDetails] = useState({
+    companyId: '',
+    caseFileNumber: '',
+    nameOfApplicant: '',
+    homeAddress: '',
+    vill: '',
+    teh: '',
+    district: '',
+    state: '',
+    pin: ''
+  })
+  const [isEditing, setIsEditing] = useState(false)
+
+  const fetchPersonalDetails = () => {
+    const storedDetails = localStorage.getItem('personalDetails')
+    if (storedDetails) {
+      setPersonalDetails(JSON.parse(storedDetails))
+    }
+  }
+
+  useEffect(() => {
+    fetchPersonalDetails()
+    const storedContent = localStorage.getItem('notepadContent')
+    if (storedContent) {
+      setNoteContent(storedContent)
+    }
+  }, [])
+
+  const handleSave = () => {
+    localStorage.setItem('notepadContent', noteContent)
+    alert('Notepad content saved!')
+  }
+
+  const handleReconnect = () => {
+    fetchPersonalDetails()
+    alert('Personal details reconnected!')
+  }
+
+  const handlePersonalDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPersonalDetails({ ...personalDetails, [e.target.name]: e.target.value })
+  }
+
+  const handlePersonalDetailsSave = () => {
+    localStorage.setItem('personalDetails', JSON.stringify(personalDetails))
+    setIsEditing(false)
+    alert('Personal details updated!')
+  }
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto">
+      <CardHeader>
+        <CardTitle>A4 Notepad</CardTitle>
+        <CardDescription>Connected with your personal details</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4 p-4 bg-gray-100 rounded-md text-sm">
+          {isEditing ? (
+            <form onSubmit={(e) => { e.preventDefault(); handlePersonalDetailsSave(); }} className="space-y-2">
+              {Object.entries(personalDetails).map(([key, value]) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <Label htmlFor={key} className="w-1/3">{key.charAt(0).toUpperCase() + key.slice(1)}:</Label>
+                  <Input
+                    id={key}
+                    name={key}
+                    value={value}
+                    onChange={handlePersonalDetailsChange}
+                    className="w-2/3"
+                  />
+                </div>
+              ))}
+              <Button type="submit">Save Details</Button>
+              <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+            </form>
+          ) : (
+            <>
+              <p><strong>Company ID:</strong> {personalDetails.companyId}</p>
+              <p><strong>Case File Number:</strong> {personalDetails.caseFileNumber}</p>
+              <p><strong>Name:</strong> {personalDetails.nameOfApplicant}</p>
+              <p><strong>Address:</strong> {personalDetails.homeAddress}, {personalDetails.vill}, {personalDetails.teh}, {personalDetails.district}, {personalDetails.state} - {personalDetails.pin}</p>
+              <Button onClick={() => setIsEditing(true)} className="mt-2">Edit Details</Button>
+            </>
+          )}
+        </div>
+        <Textarea 
+          value={noteContent}
+          onChange={(e) => setNoteContent(e.target.value)}
+          placeholder="Start typing your notes here..."
+          className="min-h-[29.7cm] w-full resize-none mb-4"
+        />
+        <div className="flex justify-between">
+          <Button onClick={handleSave}>Save Notepad</Button>
+          <Button onClick={handleReconnect} variant="outline">Reconnect Personal Details</Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Main App Component
+export default function App() {
+  const pathname = usePathname()
+
+  let content;
+  switch (pathname) {
+    case '/login':
+      content = <Login />;
+      break;
+    case '/dashboard':
+      content = <Dashboard />;
+      break;
+    case '/search':
+      content = <Search />;
+      break;
+    case '/change-password':
+      content = <ChangePassword />;
+      break;
+    case '/notepad':
+      content = <Notepad />;
+      break;
+    default:
+      content = <Login />;
+  }
+
+  return <Layout>{content}</Layout>;
+}
